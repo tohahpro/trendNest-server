@@ -94,6 +94,36 @@ async function run() {
         })
 
 
+        app.get('/menu', verifyToken, async (req, res) => {
+            const email = req.query.email
+            const query = { email: email }
+            const result = await productsCollection.find(query).toArray()
+            res.send(result)
+        })
+
+
+        app.delete('/product-delete/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await productsCollection.deleteOne(query);
+            res.send(result)
+        })
+
+
+
+        // product Update 
+
+        app.get('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await productsCollection.findOne(query);
+            res.send(result)
+        })
+
+
+
+
+
 
         // ----------- ::::::: [ get user api for role ] ::::: ----------------
 
@@ -102,6 +132,7 @@ async function run() {
             const result = await userCollection.findOne({ email })
             res.send(result)
         })
+
 
 
 
@@ -155,7 +186,7 @@ async function run() {
         // ------------::::: Payment intent :::::---------------
         //-------------- :::::::::::::::: ------------------
 
-        app.post('/create-payment-intent', async (req, res) => {
+        app.post('/create-payment-intent', verifyToken, async (req, res) => {
             const { price } = req.body;
             const amount = parseInt(price * 100);
 
@@ -180,6 +211,15 @@ async function run() {
 
             res.send(paymentResult)
         })
+
+
+        app.get('/payments/:email', async (req, res) => {
+            const user = req.params.email;
+            const query = { email: user }
+            const result = await membershipCollection.findOne(query);
+            res.send(result)
+        })
+
 
 
 
