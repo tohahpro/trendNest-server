@@ -113,7 +113,7 @@ async function run() {
 
         // product Update 
 
-        app.get('/product/:id', async (req, res) => {
+        app.get('/product-update/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await productsCollection.findOne(query);
@@ -121,7 +121,22 @@ async function run() {
         })
 
 
-
+        app.patch('/product-update/:id', async (req, res) => {
+            const item = req.body
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedItem = {
+                $set: {
+                    name: item.name,
+                    category: item.category,
+                    price: item.price,
+                    recipe: item.recipe,
+                    image: item.image
+                }
+            }
+            const result = await productsCollection.updateOne(filter, updatedItem)
+            res.send(result)
+        })
 
 
 
