@@ -3,6 +3,7 @@ require('dotenv').config()
 const cors = require('cors')
 const app = express()
 const jwt = require('jsonwebtoken');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 
 const port = process.env.PORT || 5000
 
@@ -41,6 +42,10 @@ async function run() {
 
         const productsCollection = client.db('trendNestDB').collection('products');
         const userCollection = client.db('trendNestDB').collection('users');
+        const membershipCollection = client.db('trendNestDB').collection('membership');
+
+
+
 
         // middlewares 
         const verifyToken = async (req, res, next) => {
@@ -143,6 +148,39 @@ async function run() {
             const result = await userCollection.insertOne(user);
             res.send(result)
         })
+
+
+
+        //-------------- :::::::::::::::: ------------------
+        // ------------::::: Payment intent :::::---------------
+        //-------------- :::::::::::::::: ------------------
+
+        app.post('/create-payment-intent', async (req, res) => {
+            const { price } = req.body;
+            const amount = parseInt(price * 100);
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                payment_method_types: ["card"],
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            })
+
+        })
+
+
+
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const paymentResult = await membershipCollection.insertOne(payment)
+            console.log('payment info', payment);
+
+            res.send(paymentResult)
+        })
+
 
 
         // Send a ping to confirm a successful connection
