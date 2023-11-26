@@ -44,6 +44,8 @@ async function run() {
         const userCollection = client.db('trendNestDB').collection('users');
         const membershipCollection = client.db('trendNestDB').collection('membership');
         const reviewCollection = client.db('trendNestDB').collection('review');
+        const voteCollection = client.db('trendNestDB').collection('upVote');
+        const reportCollection = client.db('trendNestDB').collection('report');
 
 
 
@@ -243,6 +245,35 @@ async function run() {
         })
 
 
+        // product vote 
+        app.post('/product-vote', async (req, res) => {
+            const vote = req.body;
+            const result = await voteCollection.insertOne(vote)
+            res.send(result)
+        })
+
+
+        app.get('/product-vote/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { productId: id }
+            const result = await voteCollection.find(query).toArray();
+            res.send(result)
+        })
+
+
+        app.post('/product-report', async (req, res) => {
+            const report = req.body;
+            const result = await reportCollection.insertOne(report)
+            res.send(result)
+        })
+
+
+        app.get('/product-report/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { productId: id }
+            const result = await reportCollection.find(query).toArray();
+            res.send(result)
+        })
 
 
         //-------------- :::::::::::::::: ------------------
