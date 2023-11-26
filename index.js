@@ -276,10 +276,16 @@ async function run() {
         })
 
 
+
+        app.get('/report-product', async (req, res) => {
+            const result = await reportCollection.find().toArray()
+            res.send(result)
+        })
+
         //-------------- :::::::::::::::: ------------------
         // ------------::::: moderator api :::::---------------
 
-        app.get('/products', verifyToken, verifyModerator, async (req, res) => {
+        app.get('/products', async (req, res) => {
             const result = await productsCollection.find().toArray()
             res.send(result)
         })
