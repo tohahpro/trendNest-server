@@ -365,6 +365,15 @@ async function run() {
         })
 
 
+        app.get('/admin-stats', async (req, res) => {
+            const users = await userCollection.estimatedDocumentCount();
+            const products = await productsCollection.estimatedDocumentCount();
+            const orders = await reviewCollection.estimatedDocumentCount();
+
+            res.send({
+                users, products, orders
+            })
+        })
 
 
         // Send a ping to confirm a successful connection
