@@ -76,6 +76,18 @@ async function run() {
         }
 
 
+        // admin verify 
+        const verifyModerator = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query)
+            const isModerator = user?.role === 'moderator';
+            if (!isModerator) {
+                return res.status(403).send({ message: 'Forbidden access' })
+            }
+            next()
+        }
+
 
 
         // Auth Related API
@@ -154,13 +166,13 @@ async function run() {
         // ----------- ::::::: [ get user api ] ::::: ----------------
 
 
-        app.get('/users', async (req, res) => {
+        app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
 
             const result = await userCollection.find().toArray();
             res.send(result)
         })
 
-        app.get('/user-update/:id', async (req, res) => {
+        app.get('/user-update/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await userCollection.findOne(query);
@@ -192,6 +204,51 @@ async function run() {
             }
 
             const result = await userCollection.insertOne(user);
+            res.send(result)
+        })
+
+
+
+
+        //-------------- :::::::::::::::: ------------------
+        // ------------::::: moderator api :::::---------------
+
+        app.get('/products', verifyToken, verifyModerator, async (req, res) => {
+            const result = await productsCollection.find().toArray()
+            res.send(result)
+        })
+
+
+        app.get('/product-status/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await productsCollection.findOne(query);
+            res.send(result)
+        })
+
+        app.put('/product-status/:id', verifyToken, verifyModerator, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedStatus = req.body
+            const status = {
+                $set: {
+                    status: updatedStatus.status
+                }
+            }
+            const result = await productsCollection.updateOne(filter, status);
+            res.send(result)
+        })
+
+
+        app.patch('/product-featured/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    role: 'featured'
+                }
+            }
+            const result = await productsCollection.updateOne(filter, updatedDoc)
             res.send(result)
         })
 
