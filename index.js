@@ -43,6 +43,7 @@ async function run() {
         const productsCollection = client.db('trendNestDB').collection('products');
         const userCollection = client.db('trendNestDB').collection('users');
         const membershipCollection = client.db('trendNestDB').collection('membership');
+        const reviewCollection = client.db('trendNestDB').collection('review');
 
 
 
@@ -204,6 +205,40 @@ async function run() {
             }
 
             const result = await userCollection.insertOne(user);
+            res.send(result)
+        })
+
+
+
+
+        //-------------- :::::::::::::::: ------------------
+        // ----------- ::::::: public product api ::::::: --------------
+
+        app.get('/all-products', async (req, res) => {
+            const result = await productsCollection.find().toArray()
+            res.send(result)
+        })
+
+
+        app.get('/product-details/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await productsCollection.findOne(query);
+            res.send(result)
+        })
+
+
+        app.post('/product-reviews', async (req, res) => {
+            const review = req.body;
+            const result = await reviewCollection.insertOne(review)
+            res.send(result)
+        })
+
+
+        app.get('/product-review/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { productId: id }
+            const result = await reviewCollection.find(query).toArray();
             res.send(result)
         })
 
