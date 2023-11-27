@@ -222,6 +222,24 @@ async function run() {
         })
 
 
+        // pagination 
+
+        app.get('/productsCount', async (req, res) => {
+            const count = await productsCollection.estimatedDocumentCount();
+            res.send({ count });
+        })
+
+        app.get('/products-pagination', async (req, res) => {
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
+
+            const result = await productsCollection.find()
+                .skip(page * size)
+                .limit(size)
+                .toArray();
+            res.send(result);
+        })
+
         app.get('/product-details/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -251,6 +269,9 @@ async function run() {
             const result = await voteCollection.insertOne(vote)
             res.send(result)
         })
+
+
+
 
 
         app.get('/product-vote/:id', async (req, res) => {
