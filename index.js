@@ -4,7 +4,6 @@ const cors = require('cors')
 const app = express()
 const jwt = require('jsonwebtoken');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
-
 const port = process.env.PORT || 5000
 
 
@@ -46,6 +45,7 @@ async function run() {
         const reviewCollection = client.db('trendNestDB').collection('review');
         const voteCollection = client.db('trendNestDB').collection('upVote');
         const reportCollection = client.db('trendNestDB').collection('report');
+        const couponCollection = client.db('trendNestDB').collection('coupon');
 
 
 
@@ -175,7 +175,7 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/user-update/:id', verifyToken, verifyAdmin, async (req, res) => {
+        app.get('/user-update/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await userCollection.findOne(query);
@@ -209,6 +209,60 @@ async function run() {
             const result = await userCollection.insertOne(user);
             res.send(result)
         })
+
+
+
+
+        // admin coupon set up 
+
+        app.post('/coupons', async (req, res) => {
+            const coupon = req.body;
+            const result = await couponCollection.insertOne(coupon)
+            res.send(result)
+
+        })
+
+        app.get('/coupons', async (req, res) => {
+            const result = await couponCollection.find().toArray()
+            res.send(result)
+        })
+
+        app.get('/coupon/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await couponCollection.findOne(query)
+            res.send(result)
+        })
+
+
+        app.patch('/coupon-update/:id', async (req, res) => {
+            const item = req.body
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedItem = {
+                $set: {
+                    discount: item.discount,
+                    coupon: item.coupon,
+                    description: item.description,
+                    endDate: item.endDate
+                }
+            }
+            const result = await couponCollection.updateOne(filter, updatedItem)
+            res.send(result)
+        })
+
+
+        app.delete('/coupon-delete/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await couponCollection.deleteOne(query);
+            res.send(result)
+        })
+
+
+
+
+
 
 
 
@@ -306,7 +360,7 @@ async function run() {
         //-------------- :::::::::::::::: ------------------
         // ------------::::: moderator api :::::---------------
 
-        app.get('/products', async (req, res) => {
+        app.get('/products', verifyToken, verifyModerator, async (req, res) => {
             const result = await productsCollection.find().toArray()
             res.send(result)
         })
@@ -328,12 +382,13 @@ async function run() {
                     status: updatedStatus.status
                 }
             }
+
             const result = await productsCollection.updateOne(filter, status);
             res.send(result)
         })
 
 
-        app.patch('/product-featured/:id', async (req, res) => {
+        app.patch('/product-featured/:id', verifyToken, verifyModerator, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updatedDoc = {
@@ -386,7 +441,7 @@ async function run() {
         })
 
 
-        app.get('/admin-stats', async (req, res) => {
+        app.get('/admin-stats', verifyToken, verifyAdmin, async (req, res) => {
             const users = await userCollection.estimatedDocumentCount();
             const products = await productsCollection.estimatedDocumentCount();
             const orders = await reviewCollection.estimatedDocumentCount();
